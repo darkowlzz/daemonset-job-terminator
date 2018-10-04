@@ -1,0 +1,42 @@
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+  name: daemonset-job-terminator-sa
+  namespace: default
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  creationTimestamp: null
+  name: manager-sidecar-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+- kind: ServiceAccount
+  name: daemonset-job-terminator-sa
+  namespace: default
+
+---
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: job-terminator
+spec:
+  serviceAccount: daemonset-job-terminator-sa
+  containers:
+  - name: terminator-container
+    image: darkowlzz/daemonset-job-terminator:latest
+    env:
+    - name: NAMESPACE
+      value: "default"
+    - name: POD_LABEL_SELECTOR
+      value: "daemonset-job=true"
+    - name: TERMINATION_WORD
+      value: "done"
+    - name: TICKER_DURATION
+      value: "10"
